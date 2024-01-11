@@ -36,29 +36,30 @@ exports.deactivate = exports.activate = void 0;
 const vscode = __importStar(__webpack_require__(1));
 const axios_1 = __importDefault(__webpack_require__(2));
 const scryfallApiUrl = 'https://api.scryfall.com/cards/named';
-async function getCardImage(cardName) {
+async function getCardData(cardName) {
     try {
         const response = await axios_1.default.get(scryfallApiUrl, {
             params: {
                 fuzzy: cardName,
             },
         });
-        // Extract image URL from the response
         const imageUrl = response.data.image_uris.normal;
-        return imageUrl;
+        const scryfallUrl = response.data.scryfall_uri;
+        return { imageUrl, scryfallUrl };
     }
     catch (error) {
         console.error('Error fetching card data from Scryfall:', error);
         return undefined;
     }
 }
-async function insertCardMarkdown(imageUrl) {
+async function insertCardMarkdown(imageUrl, cardName, scryfallUrl) {
     const editor = vscode.window.activeTextEditor;
     if (editor) {
         const selection = editor.selection;
-        const text = `![Card Image](${imageUrl})`;
+        const markdownText = `[![${cardName}](${imageUrl})](${scryfallUrl})`;
+        // Replace the selected text with the clickable link and image
         editor.edit((editBuilder) => {
-            editBuilder.replace(selection, text);
+            editBuilder.replace(selection, markdownText);
         });
     }
     else {
@@ -69,12 +70,13 @@ function activate(context) {
     let disposable = vscode.commands.registerCommand('extension.convertCardName', async () => {
         const cardName = vscode.window.activeTextEditor?.document.getText(vscode.window.activeTextEditor?.selection);
         if (cardName) {
-            const imageUrl = await getCardImage(cardName);
-            if (imageUrl) {
-                await insertCardMarkdown(imageUrl);
+            const cardData = await getCardData(cardName);
+            if (cardData) {
+                const { imageUrl, scryfallUrl } = cardData;
+                await insertCardMarkdown(imageUrl, cardName, scryfallUrl);
             }
             else {
-                vscode.window.showErrorMessage('Failed to fetch card image');
+                vscode.window.showErrorMessage('Failed to fetch card data');
             }
         }
         else {

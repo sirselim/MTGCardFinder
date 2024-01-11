@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const scryfallApiUrl = 'https://api.scryfall.com/cards/named';
 
-async function getCardImage(cardName: string): Promise<string | undefined> {
+async function getCardData(cardName: string): Promise<{ imageUrl: string; scryfallUrl: string } | undefined> {
   try {
     const response = await axios.get(scryfallApiUrl, {
       params: {
@@ -11,29 +11,31 @@ async function getCardImage(cardName: string): Promise<string | undefined> {
       },
     });
 
-    // Extract image URL from the response
     const imageUrl = response.data.image_uris.normal;
+    const scryfallUrl = response.data.scryfall_uri;
 
-    return imageUrl;
+    return { imageUrl, scryfallUrl };
   } catch (error) {
     console.error('Error fetching card data from Scryfall:', error);
     return undefined;
   }
 }
 
-async function insertCardMarkdown(imageUrl: string) {
-  const editor = vscode.window.activeTextEditor;
-
-  if (editor) {
-    const selection = editor.selection;
-    const text = `![Card Image](${imageUrl})`;
-    editor.edit((editBuilder) => {
-      editBuilder.replace(selection, text);
-    });
-  } else {
-    vscode.window.showErrorMessage('No active text editor');
+async function insertCardMarkdown(imageUrl: string, cardName: string, scryfallUrl: string) {
+	const editor = vscode.window.activeTextEditor;
+  
+	if (editor) {
+	  const selection = editor.selection;
+	  const markdownText = `[![${cardName}](${imageUrl})](${scryfallUrl})`;
+  
+	  // Replace the selected text with the clickable link and image
+	  editor.edit((editBuilder) => {
+		editBuilder.replace(selection, markdownText);
+	  });
+	} else {
+	  vscode.window.showErrorMessage('No active text editor');
+	}
   }
-}
 
 export function activate(context: vscode.ExtensionContext) {
   let disposable = vscode.commands.registerCommand('extension.convertCardName', async () => {
@@ -42,11 +44,12 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     if (cardName) {
-      const imageUrl = await getCardImage(cardName);
-      if (imageUrl) {
-        await insertCardMarkdown(imageUrl);
+      const cardData = await getCardData(cardName);
+      if (cardData) {
+        const { imageUrl, scryfallUrl } = cardData;
+        await insertCardMarkdown(imageUrl, cardName, scryfallUrl);
       } else {
-        vscode.window.showErrorMessage('Failed to fetch card image');
+        vscode.window.showErrorMessage('Failed to fetch card data');
       }
     } else {
       vscode.window.showErrorMessage('No card name selected');

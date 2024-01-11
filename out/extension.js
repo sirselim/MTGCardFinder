@@ -39,7 +39,7 @@ exports.deactivate = exports.activate = void 0;
 const vscode = __importStar(require("vscode"));
 const axios_1 = __importDefault(require("axios"));
 const scryfallApiUrl = 'https://api.scryfall.com/cards/named';
-function getCardImage(cardName) {
+function getCardData(cardName) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const response = yield axios_1.default.get(scryfallApiUrl, {
@@ -47,9 +47,9 @@ function getCardImage(cardName) {
                     fuzzy: cardName,
                 },
             });
-            // Extract image URL from the response
             const imageUrl = response.data.image_uris.normal;
-            return imageUrl;
+            const scryfallUrl = response.data.scryfall_uri;
+            return { imageUrl, scryfallUrl };
         }
         catch (error) {
             console.error('Error fetching card data from Scryfall:', error);
@@ -57,14 +57,15 @@ function getCardImage(cardName) {
         }
     });
 }
-function insertCardMarkdown(imageUrl) {
+function insertCardMarkdown(imageUrl, cardName, scryfallUrl) {
     return __awaiter(this, void 0, void 0, function* () {
         const editor = vscode.window.activeTextEditor;
         if (editor) {
             const selection = editor.selection;
-            const text = `![Card Image](${imageUrl})`;
+            const markdownText = `[![${cardName}](${imageUrl})](${scryfallUrl})`;
+            // Replace the selected text with the clickable link and image
             editor.edit((editBuilder) => {
-                editBuilder.replace(selection, text);
+                editBuilder.replace(selection, markdownText);
             });
         }
         else {
@@ -77,12 +78,13 @@ function activate(context) {
         var _a, _b;
         const cardName = (_a = vscode.window.activeTextEditor) === null || _a === void 0 ? void 0 : _a.document.getText((_b = vscode.window.activeTextEditor) === null || _b === void 0 ? void 0 : _b.selection);
         if (cardName) {
-            const imageUrl = yield getCardImage(cardName);
-            if (imageUrl) {
-                yield insertCardMarkdown(imageUrl);
+            const cardData = yield getCardData(cardName);
+            if (cardData) {
+                const { imageUrl, scryfallUrl } = cardData;
+                yield insertCardMarkdown(imageUrl, cardName, scryfallUrl);
             }
             else {
-                vscode.window.showErrorMessage('Failed to fetch card image');
+                vscode.window.showErrorMessage('Failed to fetch card data');
             }
         }
         else {
