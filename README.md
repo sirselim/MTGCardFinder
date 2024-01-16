@@ -1,71 +1,34 @@
-# mtgcardfinder README
+# MTG Card Markdown Toolkit
 
-This is the README for your extension "mtgcardfinder". After writing up a brief description, we recommend including the following sections.
+## Overview
 
-## Features
+The MTG Card Markdown Toolkit extension for Visual Studio Code simplifies the process of working with Magic: The Gathering (MTG) card names in Markdown documents. It provides two main features:
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+1. Convert Card Name: Allows users to select text containing MTG card names and convert them into Markdown links. This is particularly useful for quickly creating links to the Scryfall pages for specific cards.
+2. Convert Card Table: Enables users to select a list of Markdown-formatted card links and converts them into a table format with three columns. This is helpful for organizing and presenting multiple card links in a structured table within a Markdown document.
 
-For example if there is an image subfolder under your extension project workspace:
+## Key Features
 
-\!\[feature X\]\(images/feature-x.png\)
+- Convert individual MTG card names to Markdown links.
+- Create a Markdown table from selected card names for better organization and presentation.
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+## Installation
 
-## Requirements
+1. Open Visual Studio Code.
+2. Go to the Extensions view (Ctrl+Shift+X or Cmd+Shift+X on macOS).
+3. Search for "Card Markdown Toolkit."
+4. Click the Install button.
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+## Usage
 
-## Extension Settings
+1. Open a document in Visual Studio Code.
+2. Select text containing MTG card names.
+3. Run the "Convert Card Name" command from the command palette (Ctrl+Shift+P or Cmd+Shift+P on macOS).
+4. Run the "Convert Card Table" command to create a table from selected card names.
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+## Commands
 
-For example:
+- Convert Card Name: Convert selected MTG card names to Markdown links.
+- Convert Card Table: Create a Markdown table from selected card names.
 
-This extension contributes the following settings:
-
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+This extension streamlines the integration of MTG card information into Markdown documents, making it easier for users to reference and display Magic cards with proper formatting and organization.

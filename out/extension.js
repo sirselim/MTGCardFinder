@@ -57,15 +57,19 @@ function getCardData(cardName) {
         }
     });
 }
-function insertCardMarkdown(imageUrl, cardName, scryfallUrl) {
+function insertCardMarkdown(imageUrl, cardName, scryfallUrl, line) {
     return __awaiter(this, void 0, void 0, function* () {
         const editor = vscode.window.activeTextEditor;
         if (editor) {
-            const selection = editor.selection;
-            const markdownText = `[![${cardName}](${imageUrl})](${scryfallUrl})`;
-            // Replace the selected text with the clickable link and image
+            const text = `[![${cardName}](${imageUrl})](${scryfallUrl})`;
+            // Get the line text and find the starting position of the card name
+            const lineText = editor.document.lineAt(line).text;
+            const cardNameStartPosition = lineText.indexOf(cardName);
+            // Insert the new text at the end of the line, removing the original card name
             editor.edit((editBuilder) => {
-                editBuilder.replace(selection, markdownText);
+                const position = new vscode.Position(line, cardNameStartPosition);
+                const range = new vscode.Range(position, position.translate(0, cardName.length));
+                editBuilder.replace(range, text);
             });
         }
         else {
@@ -73,25 +77,85 @@ function insertCardMarkdown(imageUrl, cardName, scryfallUrl) {
         }
     });
 }
+function convertCardTable(selectedText) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const lines = selectedText.split('\n');
+        const cards = [];
+        // Extract card information from Markdown links
+        for (const line of lines) {
+            const match = line.match(/\[!\[([^\]]+)\]\(([^)]+)\)\]\(([^)]+)\)/);
+            if (match) {
+                const [, cardName, imageUrl, scryfallUrl] = match;
+                cards.push({ cardName, imageUrl, scryfallUrl });
+            }
+        }
+        // Create a table with three columns and headers
+        const tableRows = [];
+        tableRows.push('| | | |');
+        tableRows.push('|---|---|---|');
+        for (let i = 0; i < cards.length; i += 3) {
+            const row = cards
+                .slice(i, i + 3)
+                .map(card => `| [![${card.cardName}](${card.imageUrl})](${card.scryfallUrl})`)
+                .join(' ') + ' |';
+            tableRows.push(row);
+        }
+        const tableMarkdown = tableRows.join('\n');
+        // Replace the selected text with the generated table
+        const editor = vscode.window.activeTextEditor;
+        if (editor) {
+            const selection = editor.selection;
+            editor.edit((editBuilder) => {
+                editBuilder.replace(selection, tableMarkdown);
+            });
+        }
+    });
+}
 function activate(context) {
     let disposable = vscode.commands.registerCommand('extension.convertCardName', () => __awaiter(this, void 0, void 0, function* () {
-        var _a, _b;
-        const cardName = (_a = vscode.window.activeTextEditor) === null || _a === void 0 ? void 0 : _a.document.getText((_b = vscode.window.activeTextEditor) === null || _b === void 0 ? void 0 : _b.selection);
-        if (cardName) {
-            const cardData = yield getCardData(cardName);
-            if (cardData) {
-                const { imageUrl, scryfallUrl } = cardData;
-                yield insertCardMarkdown(imageUrl, cardName, scryfallUrl);
-            }
-            else {
-                vscode.window.showErrorMessage('Failed to fetch card data');
-            }
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            vscode.window.showErrorMessage('No active text editor');
+            return;
         }
-        else {
-            vscode.window.showErrorMessage('No card name selected');
+        const selections = editor.selections;
+        if (selections.length === 0) {
+            vscode.window.showErrorMessage('No text selected');
+            return;
+        }
+        for (const selection of selections) {
+            for (let line = selection.start.line; line <= selection.end.line; line++) {
+                const selectedText = editor.document.lineAt(line).text.trim();
+                const cardName = selectedText;
+                if (cardName) {
+                    const cardData = yield getCardData(cardName);
+                    if (cardData) {
+                        const { imageUrl, scryfallUrl } = cardData;
+                        yield insertCardMarkdown(imageUrl, cardName, scryfallUrl, line);
+                    }
+                    else {
+                        vscode.window.showErrorMessage(`Failed to fetch card data for '${cardName}'`);
+                    }
+                }
+            }
         }
     }));
-    context.subscriptions.push(disposable);
+    let convertCardTableDisposable = vscode.commands.registerCommand('extension.convertCardTable', () => __awaiter(this, void 0, void 0, function* () {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            vscode.window.showErrorMessage('No active text editor');
+            return;
+        }
+        const selection = editor.selection;
+        const selectedText = editor.document.getText(selection);
+        if (selectedText) {
+            yield convertCardTable(selectedText);
+        }
+        else {
+            vscode.window.showErrorMessage('No text selected');
+        }
+    }));
+    context.subscriptions.push(disposable, convertCardTableDisposable);
 }
 exports.activate = activate;
 // this method is called when your extension is deactivated
